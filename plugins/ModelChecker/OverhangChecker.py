@@ -11,24 +11,33 @@ from UM.Scene.SceneNode import SceneNode
 from cura.Settings.GlobalStack import GlobalStack
 
 
-MIN_SUPPORT_AREA: float = 0.1  # mm^2   # TODO: Change via preference?
-CLOSE_TO_BUILDPLATE: float = 0.05  # TODO: This needs to be proportional to (half) the layer-height.
-
-
 def getSupportAngle() -> float:
-    # NOTE/TODO: This duplicates some code from PaintView, which means we got this code in some form 3x.
     global_container_stack: GlobalStack = Application.getInstance().getGlobalContainerStack()
     if not global_container_stack or not global_container_stack.getValue("support_enable"):
         return 1.0
     extruder_nr = int(global_container_stack.getExtruderPositionValueWithDefault("support_extruder_nr"))
     if extruder_nr < 0 or extruder_nr >= len(global_container_stack.extruderList):
         return 1.0
-    return (global_container_stack.extruderList[extruder_nr].getProperty("support_angle", "value") or 90.0) * math.tau / 360.0
+    return (global_container_stack.extruderList[extruder_nr].getValue("support_angle") or 90.0) * math.tau / 360.0
+
+
+def getCloseToBuildplate() -> float:
+    global_container_stack: GlobalStack = Application.getInstance().getGlobalContainerStack()
+    return 0.5 * global_container_stack.getValue("layer_height") if global_container_stack else 0.05
+
+
+def getMinSupportArea() -> float:
+    global_container_stack: GlobalStack = Application.getInstance().getGlobalContainerStack()
+    return global_container_stack.getValue("minimum_support_area") if global_container_stack else 4.0
 
 
 def checkForDownFaces(node: SceneNode, support_angle: float) -> bool:
+    close_to_buildplate = getCloseToBuildplate()
+    min_support_area = getMinSupportArea()
+
     meshdata = node.getMeshDataTransformed()
     face_count = meshdata.getFaceCount()
+
     candidate_overhangs = {}
     for i_face in range(face_count):
         pos, face_norm = meshdata.getFacePlane(i_face)
@@ -40,7 +49,7 @@ def checkForDownFaces(node: SceneNode, support_angle: float) -> bool:
 
         # Check if the face is too close to (or underneath) the build-plate to 'count'.
         a, b, c = meshdata.getFaceNodes(i_face)
-        if max(float(a[1]), float(b[1]), float(c[1])) < CLOSE_TO_BUILDPLATE:
+        if max(float(a[1]), float(b[1]), float(c[1])) < close_to_buildplate:
             continue
 
         # Collect the area for further analysis.
@@ -67,13 +76,14 @@ def checkForDownFaces(node: SceneNode, support_angle: float) -> bool:
             continue
         group = _collect_neighbours(i_face)
         group_area = sum([candidate_overhangs[x] for x in group])
-        if group_area > MIN_SUPPORT_AREA:
+        if group_area >= min_support_area:
             return True
 
     return False
 
 
 def checkForDownVertices(node: SceneNode) -> bool:
+    close_to_buildplate = getCloseToBuildplate()
     meshdata = node.getMeshDataTransformed()
     face_count = meshdata.getFaceCount()
 
@@ -82,7 +92,7 @@ def checkForDownVertices(node: SceneNode) -> bool:
 
     verts_with_lower = dict()
     def _handle_edge(va: numpy.ndarray, vb: numpy.ndarray) -> None:
-        if min(float(va[1]), float(vb[1])) < CLOSE_TO_BUILDPLATE:
+        if min(float(va[1]), float(vb[1])) < close_to_buildplate:
             verts_with_lower[_to_hashable(va)] = False
             verts_with_lower[_to_hashable(vb)] = False
         if va[1] == vb[1]:
