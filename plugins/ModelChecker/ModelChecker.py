@@ -1,11 +1,15 @@
-# Copyright (c) 2018 Ultimaker B.V.
+# Copyright (c) 2026 UltiMaker
 # Cura is released under the terms of the LGPLv3 or higher.
 
+from . import OverhangChecker
+
 import os
+from typing import Generator, Optional
 
 from PyQt6.QtCore import QObject, pyqtSlot, pyqtSignal, pyqtProperty, QTimer
 
 from UM.Application import Application
+from UM.Backend.Backend import BackendState
 from UM.Extension import Extension
 from UM.Logger import Logger
 from UM.Message import Message
@@ -21,7 +25,7 @@ class ModelChecker(QObject, Extension):
     onChanged = pyqtSignal()
     """Signal that gets emitted when anything changed that we need to check."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self._button_view = None
@@ -40,7 +44,14 @@ class ModelChecker(QObject, Extension):
         Application.getInstance().getController().getScene().sceneChanged.connect(self._onChanged)
         Application.getInstance().globalContainerStackChanged.connect(self._onChanged)
 
-    def _onChanged(self, *args, **kwargs):
+        self._unhandled_slice_state: Optional[BackendState] = None
+        Application.getInstance().getBackend().backendStateChange.connect(self._onSliceState)
+
+    def _onSliceState(self, state: BackendState) -> None:
+        self._unhandled_slice_state = state
+        self._onChanged()
+
+    def _onChanged(self, *args, **kwargs) -> None:
         # Ignore camera updates.
         if len(args) == 0:
             self._change_timer.start()
@@ -48,7 +59,7 @@ class ModelChecker(QObject, Extension):
         if not isinstance(args[0], Camera):
             self._change_timer.start()
 
-    def _pluginsInitialized(self):
+    def _pluginsInitialized(self) -> None:
         """Called when plug-ins are initialized.
 
         This makes sure that we listen to changes of the material and that the
@@ -58,7 +69,7 @@ class ModelChecker(QObject, Extension):
         Application.getInstance().getMachineManager().rootMaterialChanged.connect(self.onChanged)
         self._createView()
 
-    def checkObjectsForShrinkage(self):
+    def checkObjectsForShrinkage(self) -> bool:
         shrinkage_threshold = 100.5 #From what shrinkage percentage a warning will be issued about the model size.
         warning_size_xy = 150 #The horizontal size of a model that would be too large when dealing with shrinking materials.
         warning_size_z = 100 #The vertical size of a model that would be too large when dealing with shrinking materials.
@@ -102,14 +113,27 @@ class ModelChecker(QObject, Extension):
 
         return len(warning_nodes) > 0
 
-    def sliceableNodes(self):
+    def checkForOverhangs(self) -> bool:
+        # _Only_ show the overhang warning on start slice.
+        if self._unhandled_slice_state != BackendState.Processing:
+            return False
+        self._unhandled_slice_state = None
+
+        support_angle = OverhangChecker.getSupportAngle()
+
+        for node in self.sliceableNodes():
+            if OverhangChecker.checkForDownFaces(node, support_angle) or OverhangChecker.checkForDownVertices(node):
+                return True
+        return False
+
+    def sliceableNodes(self) -> Generator:
         # Add all sliceable scene nodes to check
         scene = Application.getInstance().getController().getScene()
         for node in DepthFirstIterator(scene.getRoot()):
             if node.callDecoration("isSliceable"):
                 yield node
 
-    def _createView(self):
+    def _createView(self) -> None:
         """Creates the view used by show popup.
 
         The view is saved because of the fairly aggressive garbage collection.
@@ -127,12 +151,14 @@ class ModelChecker(QObject, Extension):
         Logger.log("d", "Model checker view created.")
 
     @pyqtProperty(bool, notify = onChanged)
-    def hasWarnings(self):
+    def hasWarnings(self) -> bool:
         danger_shrinkage = self.checkObjectsForShrinkage()
-        return any((danger_shrinkage, )) #If any of the checks fail, show the warning button.
+        overhangs = self.checkForOverhangs()
+        print(overhangs)
+        return any((danger_shrinkage, overhangs, )) #If any of the checks fail, show the warning button.
 
     @pyqtSlot()
-    def showWarnings(self):
+    def showWarnings(self) -> None:
         self._caution_message.show()
 
     def _getMaterialShrinkage(self) -> float:
