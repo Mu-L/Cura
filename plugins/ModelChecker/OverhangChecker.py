@@ -2,7 +2,7 @@
 # Cura is released under the terms of the LGPLv3 or higher.
 
 import math
-from typing import Set
+from typing import Set, Tuple
 
 import numpy
 
@@ -38,12 +38,12 @@ def checkForDownFaces(node: SceneNode, support_angle: float) -> bool:
         if angle < support_angle:
             continue
 
+        # Check if the face is too close to (or underneath) the build-plate to 'count'.
         a, b, c = meshdata.getFaceNodes(i_face)
         if max(float(a[1]), float(b[1]), float(c[1])) < CLOSE_TO_BUILDPLATE:
             continue
 
         # Collect the area for further analysis.
-        # (Small areas that nonetheless need to be supported should be caught by checkForDownVertices).
         area = 0.5 * numpy.linalg.norm(numpy.abs(numpy.cross(b - a, c - a)))
         candidate_overhangs[i_face] = area
 
@@ -61,6 +61,7 @@ def checkForDownFaces(node: SceneNode, support_angle: float) -> bool:
             result = result.union(_collect_neighbours(nb_face))
         return result
 
+    # Is there a big enough area that needs to be supported?
     for i_face, angle in candidate_overhangs.items():
         if i_face in visited:
             continue
@@ -73,4 +74,31 @@ def checkForDownFaces(node: SceneNode, support_angle: float) -> bool:
 
 
 def checkForDownVertices(node: SceneNode) -> bool:
-    return False  # TODO!
+    meshdata = node.getMeshDataTransformed()
+    face_count = meshdata.getFaceCount()
+
+    def _to_hashable(pt: numpy.ndarray) -> Tuple[float, float, float]:
+        return float(pt[0]), float(pt[1]), float(pt[2])
+
+    verts_with_lower = dict()
+    def _handle_edge(va: numpy.ndarray, vb: numpy.ndarray) -> None:
+        if min(float(va[1]), float(vb[1])) < CLOSE_TO_BUILDPLATE:
+            verts_with_lower[_to_hashable(va)] = False
+            verts_with_lower[_to_hashable(vb)] = False
+        if va[1] == vb[1]:
+            return
+        verts_with_lower[_to_hashable(va if va[1] > vb[1] else vb)] = False
+
+    # Create a vertex adjacency graph -- but only append vertices that are _lower_ (except too close or below the BP).
+    for i_face in range(face_count):
+        a, b, c = meshdata.getFaceNodes(i_face)
+        for vert in (a, b, c):
+            v = _to_hashable(vert)
+            if v not in verts_with_lower:
+                verts_with_lower[v] = True
+        _handle_edge(a, b)
+        _handle_edge(b, c)
+        _handle_edge(c, a)
+
+    # Any vertex that has no adjacencies (that is, no vertices that are lower than it) is downward.
+    return any(verts_with_lower.values())

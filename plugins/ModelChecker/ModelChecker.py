@@ -154,7 +154,6 @@ class ModelChecker(QObject, Extension):
     def hasWarnings(self) -> bool:
         danger_shrinkage = self.checkObjectsForShrinkage()
         overhangs = self.checkForOverhangs()
-        print(overhangs)
         return any((danger_shrinkage, overhangs, )) #If any of the checks fail, show the warning button.
 
     @pyqtSlot()
