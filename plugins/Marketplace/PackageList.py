@@ -175,12 +175,7 @@ class PackageList(ListModel):
     @pyqtProperty(bool, notify = hasUpdatablePackagesChanged)
     def hasUpdatablePackages(self) -> bool:
         """True when at least one package in this list has a pending update available."""
-        for index in range(self.rowCount()):
-            data = self.getItem(index)
-            package = data.get("package") if data else None
-            if package and package.canUpdate and not package.isMissingPackageInformation:
-                return True
-        return False
+        return self.updatablePackagesCount() >= 1
 
     @pyqtProperty(int, notify = hasUpdatablePackagesChanged)
     def updatablePackagesCount(self) -> int:
