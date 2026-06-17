@@ -128,6 +128,8 @@ class ModelChecker(QObject, Extension):
 
         warning_nodes = []
         for node in self.sliceableNodes():
+            if node.hasDecoration("getPaintedSupportTexels") and node.callDecoration("getPaintedSupportTexels") > 0:
+                continue
             if OverhangChecker.checkForDownFaces(node) or OverhangChecker.checkForDownVertices(node):
                 warning_nodes.append(node)
 
