@@ -1,6 +1,7 @@
 [5.14]
 
 * New features and improvements:
+- Experimental support for Cura on Windows ARM platforms
 - Introduced option to paint on the model to indicate preferred and blocked areas for support placement
 - Custom GCode parts are now processed in the engine, to ensure that all the variables have the most accurate value
 - End-of-print GCode variables are now processed in the engine, to ensure that more accurate values are inserted, contributed by @wawanbreton
