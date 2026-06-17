@@ -2,7 +2,7 @@
 
 * New features and improvements:
 - Experimental support for Cura on Windows ARM platforms
-- Introduced option to paint on the model to indicate preferred and blocked areas for support placement
+- Introduced support-painting; paint on the model to indicate where support should and shouldn't be placed
 - Custom GCode parts are now processed in the engine, to ensure that all the variables have the most accurate value
 - End-of-print GCode variables are now processed in the engine, to ensure that more accurate values are inserted, contributed by @wawanbreton
 - Dialogs that were previously created at application boot are now created only when necessary, which saves some boot time and memory
@@ -16,10 +16,10 @@ _ Discard very thin infill areas that are printed within skin and disrupts the f
 - Introduced Minimum Infill Line Length, which allows removing unnecessary lines of infill added in small areas
 
 * Bug fixes:
-- Fixed the most common sources of slicing crashes that are resolved by moving the model on the build plate
+- Fixed the most common sources of slicing crashes (those that would have to be worked around by moving the model on the build plate)
 - Removed an unnecessary and long travel move added when printing supported floating models
-- Fixed an issue where top and bottom surfaces could be generated although they were disabled
-- Fixed the print temperature command of the initial layer when using zigzag pattern, contributed by @hellAholic
+- Fixed an issue where top and bottom surfaces could be generated, although they were disabled
+- Fixed the print temperature command of the initial layer when using the 'zigzag' pattern, contributed by @hellAholic
 - Fixed an issue where the project window could be displayed at an unexpected position
 
 * Printer definitions, profiles and materials:
