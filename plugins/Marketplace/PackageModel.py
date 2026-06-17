@@ -68,6 +68,7 @@ class PackageModel(QObject):
 
         self._can_update = False
         self._section_title = section_title
+        self._insertion_index: int = 0  # Set by the list when this package is appended; used to restore original order.
         self.sdk_version = package_data.get("sdk_version_semver", "")
         # Note that there's a lot more info in the package_data than just these specified here.
 

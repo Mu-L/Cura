@@ -124,6 +124,7 @@ class RemotePackageList(PackageList):
         for package_data in response_data["data"]:
             try:
                 package = PackageModel(package_data, parent = self)
+                package._insertion_index = self.rowCount()
                 self._connectManageButtonSignals(package)
                 self.appendItem({"package": package})  # Add it to this list model.
             except RuntimeError:

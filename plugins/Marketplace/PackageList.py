@@ -52,7 +52,6 @@ class PackageList(ListModel):
         self._license_dialogs: Dict[str, QObject] = {}
 
         self._sort_by_install_status = False
-        self._pre_sort_order: List[str] = []  # Package IDs in order before install-status sort was applied.
 
         # Queue for sequential bulk updates triggered from the tab-level "Update all" button.
         self._pending_bulk_update_ids: List[str] = []
@@ -175,7 +174,7 @@ class PackageList(ListModel):
     @pyqtProperty(bool, notify = hasUpdatablePackagesChanged)
     def hasUpdatablePackages(self) -> bool:
         """True when at least one package in this list has a pending update available."""
-        return self.updatablePackagesCount() >= 1
+        return self.updatablePackagesCount >= 1
 
     @pyqtProperty(int, notify = hasUpdatablePackagesChanged)
     def updatablePackagesCount(self) -> int:
@@ -195,7 +194,6 @@ class PackageList(ListModel):
             self._sort_by_install_status = value
             self.sortByInstallStatusChanged.emit()
             if value:
-                self._saveOrder()
                 self._applyInstallStatusSort()
             else:
                 self._restoreOrder()
@@ -223,22 +221,9 @@ class PackageList(ListModel):
             return 2
         self.sort(_priority, key = "package")
 
-    def _saveOrder(self) -> None:
-        """Snapshot the current package ID order so it can be restored later."""
-        self._pre_sort_order = []
-        for index in range(self.rowCount()):
-            data = self.getItem(index)
-            package = data.get("package") if data else None
-            if package:
-                self._pre_sort_order.append(package.packageId)
-
     def _restoreOrder(self) -> None:
-        """Restore the item order that was saved before the install-status sort was applied."""
-        if not self._pre_sort_order:
-            return
-        order_map = {pkg_id: i for i, pkg_id in enumerate(self._pre_sort_order)}
-        self.sort(lambda model: order_map.get(model.packageId, len(self._pre_sort_order)), key = "package")
-        self._pre_sort_order = []
+        """Re-sort items back into their original API/insertion order."""
+        self.sort(lambda model: model._insertion_index, key = "package")
 
     @pyqtSlot()
     def updateAllPackages(self) -> None:
