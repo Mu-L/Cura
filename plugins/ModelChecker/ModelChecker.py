@@ -103,15 +103,18 @@ class ModelChecker(QObject, Extension):
                 if bbox is not None and (bbox.width >= warning_size_xy or bbox.depth >= warning_size_xy or bbox.height >= warning_size_z):
                     warning_nodes.append(node)
 
+        if len(warning_nodes) <= 0:
+            return False
+
         self._caution_message.setText(catalog.i18nc(
             "@info:status",
-            "<p>One or more 3D models may not print optimally due to the model size and material configuration:</p>\n"
-            "<p>{model_names}</p>\n"
-            "<p>Find out how to ensure the best possible print quality and reliability.</p>\n"
+            "<p>One or more 3D models may not print optimally due to the model size and material configuration:</p>"
+            "<p>{model_names}</p>"
+            "<p>Find out how to ensure the best possible print quality and reliability.</p>"
             "<p><a href=\"https://support.ultimaker.com/s/article/1667337573434\">View print quality guide</a></p>"
             ).format(model_names = ", ".join([n.getName() for n in warning_nodes])))
 
-        return len(warning_nodes) > 0
+        return True
 
     def checkForOverhangs(self) -> bool:
         # _Only_ show the overhang warning on start slice.
@@ -119,12 +122,27 @@ class ModelChecker(QObject, Extension):
             return False
         self._unhandled_slice_state = None
 
-        support_angle = OverhangChecker.getSupportAngle()
+        global_container_stack = Application.getInstance().getGlobalContainerStack()
+        if global_container_stack and global_container_stack.getValue("support_enable"):
+            return False
 
+        warning_nodes = []
         for node in self.sliceableNodes():
-            if OverhangChecker.checkForDownFaces(node, support_angle) or OverhangChecker.checkForDownVertices(node):
-                return True
-        return False
+            if OverhangChecker.checkForDownFaces(node) or OverhangChecker.checkForDownVertices(node):
+                warning_nodes.append(node)
+
+        if len(warning_nodes) <= 0:
+            return False
+
+        self._caution_message.setText(catalog.i18nc(
+            "@info:status",
+            "<p>One or more 3D models may not print optimally due to the model shape and missing support:</p>"
+            "<p>{model_names}</p>"
+            "<p>Enable auto-support or paint on support for better print quality and reliability.</p>"
+            "<p><a href=\"https://support.ultimaker.com/s/article/1667417606331\">View support settings guide</a></p>"
+            ).format(model_names = ", ".join([n.getName() for n in warning_nodes])))
+
+        return True
 
     def sliceableNodes(self) -> Generator:
         # Add all sliceable scene nodes to check
@@ -154,7 +172,10 @@ class ModelChecker(QObject, Extension):
     def hasWarnings(self) -> bool:
         danger_shrinkage = self.checkObjectsForShrinkage()
         overhangs = self.checkForOverhangs()
-        return any((danger_shrinkage, overhangs, )) #If any of the checks fail, show the warning button.
+        if any((danger_shrinkage, overhangs,)):
+            self.showWarnings()  # Already show the warnings, regardless of the state of the button.
+            return True  # If any of the checks fail, show the warning button.
+        return False
 
     @pyqtSlot()
     def showWarnings(self) -> None:

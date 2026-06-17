@@ -31,7 +31,8 @@ def getMinSupportArea() -> float:
     return global_container_stack.getValue("minimum_support_area") if global_container_stack else 4.0
 
 
-def checkForDownFaces(node: SceneNode, support_angle: float) -> bool:
+def checkForDownFaces(node: SceneNode) -> bool:
+    support_angle = getSupportAngle()
     close_to_buildplate = getCloseToBuildplate()
     min_support_area = getMinSupportArea()
 
@@ -95,6 +96,7 @@ def checkForDownVertices(node: SceneNode) -> bool:
         if min(float(va[1]), float(vb[1])) < close_to_buildplate:
             verts_with_lower[_to_hashable(va)] = False
             verts_with_lower[_to_hashable(vb)] = False
+            return
         if va[1] == vb[1]:
             return
         verts_with_lower[_to_hashable(va if va[1] > vb[1] else vb)] = False
