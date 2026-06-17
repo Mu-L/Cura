@@ -232,7 +232,7 @@ class PackageList(ListModel):
         This acts only on the package models present in this specific list instance, which keeps
         the action scoped to the currently visible tab.
         """
-        if self._active_bulk_update_id:
+        if self._bulk_update_in_progress:
             return
 
         self._pending_bulk_update_ids = []
