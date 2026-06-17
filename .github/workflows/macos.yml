@@ -44,6 +44,7 @@ on:
           - self-hosted-X64
           - self-hosted-ARM64
           - macos-12
+          - self-hosted-macos-15
 
 jobs:
   macos-installer:
