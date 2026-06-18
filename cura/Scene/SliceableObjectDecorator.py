@@ -30,7 +30,7 @@ class SliceableObjectDecorator(SceneNodeDecorator):
         if application is not None:
             application.getMachineManager().extruderChanged.connect(self._updateIsAssignedToDisabledExtruder)
         self._painted_extruders: Optional[List[int]] = None
-        self._painted_support_texels: int = 0
+        self._painted_support_texels: bool = False
 
         self.paintTextureChanged = Signal()
 
@@ -73,7 +73,7 @@ class SliceableObjectDecorator(SceneNodeDecorator):
 
     def _onTextureChangeTimerFinished(self) -> None:
         self._painted_extruders = None
-        self._painted_support_texels = 0
+        self._painted_support_texels = False
 
         if self._paint_texture is None or self._paint_texture.getImage() is None:
             return
@@ -103,7 +103,7 @@ class SliceableObjectDecorator(SceneNodeDecorator):
     def _updatePaintedSupport(self, image_array) -> None:
         bit_range_start, bit_range_end = self._texture_data_mapping["support"]
         bit_mask = 0x1 << bit_range_start
-        self._painted_support_texels = numpy.count_nonzero(image_array & bit_mask)
+        self._painted_support_texels = numpy.any(image_array & bit_mask)
 
     def setPaintTexture(self, texture: Texture) -> None:
         self._paint_texture = texture
@@ -158,7 +158,7 @@ class SliceableObjectDecorator(SceneNodeDecorator):
     def getPaintedExtruders(self) -> Optional[List[int]]:
         return self._painted_extruders
 
-    def getPaintedSupportTexels(self) -> int:
+    def getPaintedSupportTexels(self) -> bool:
         return self._painted_support_texels
 
     def _connectToExtruderChangedSignal(self):

@@ -1,6 +1,6 @@
 # Copyright (c) 2026 UltiMaker
 # Cura is released under the terms of the LGPLv3 or higher.
-
+from cura.Settings.GlobalStack import GlobalStack
 from . import OverhangChecker
 
 import os
@@ -34,6 +34,7 @@ class ModelChecker(QObject, Extension):
             lifetime = 0,
             title = catalog.i18nc("@info:title", "3D Model Assistant"),
             message_type = Message.MessageType.WARNING)
+        self._caution_message.actionTriggered.connect(self._onMessageActionTriggered)
 
         self._change_timer = QTimer()
         self._change_timer.setInterval(200)
@@ -128,7 +129,7 @@ class ModelChecker(QObject, Extension):
 
         warning_nodes = []
         for node in self.sliceableNodes():
-            if node.hasDecoration("getPaintedSupportTexels") and node.callDecoration("getPaintedSupportTexels") > 0:
+            if node.hasDecoration("getPaintedSupportTexels") and node.callDecoration("getPaintedSupportTexels"):
                 continue
             if OverhangChecker.checkForDownFaces(node) or OverhangChecker.checkForDownVertices(node):
                 warning_nodes.append(node)
@@ -143,8 +144,21 @@ class ModelChecker(QObject, Extension):
             "<p>Enable auto-support or paint on support for better print quality and reliability.</p>"
             "<p><a href=\"https://support.ultimaker.com/s/article/1667417606331\">View support settings guide</a></p>"
             ).format(model_names = ", ".join([n.getName() for n in warning_nodes])))
+        self._caution_message.addAction("enable_support",
+          name=catalog.i18nc("@button", "Enable Auto-Support"),
+          icon="",
+          description=catalog.i18nc("@label", "Support for the model is currently off, turn auto-support on.")
+          )
 
         return True
+
+    def _onMessageActionTriggered(self, message: Message, message_action: str) -> None:
+        if message_action == "enable_support":
+            message.hide()
+            global_container_stack: GlobalStack = Application.getInstance().getGlobalContainerStack()
+            if not global_container_stack:
+                return
+            global_container_stack.setProperty("support_enable", "value", True)
 
     def sliceableNodes(self) -> Generator:
         # Add all sliceable scene nodes to check
@@ -172,6 +186,8 @@ class ModelChecker(QObject, Extension):
 
     @pyqtProperty(bool, notify = onChanged)
     def hasWarnings(self) -> bool:
+        self._caution_message.getActions().clear()
+
         danger_shrinkage = self.checkObjectsForShrinkage()
         overhangs = self.checkForOverhangs()
         if any((danger_shrinkage, overhangs,)):
