@@ -7,7 +7,7 @@
 - End-of-print GCode variables are now processed in the engine, to ensure that more accurate values are inserted, contributed by @wawanbreton
 - Dialogs that were previously created at application boot are now created only when necessary, which saves some boot time and memory
 - Discard top and bottom surfaces when their settings are identical to skin settings, which avoids printing them separately
-_ Discard very thin infill areas that are printed within skin and disrupts the flow
+- Discard very thin infill areas that are printed within skin and disrupts the flow
 - Improve positioning of models when loading multiple models from a non-project 3MF file
 - Improved the OpenGL shaders compatibility, contributed by @hellAholic
 
