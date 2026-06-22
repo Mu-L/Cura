@@ -1,4 +1,4 @@
-name: Windows Installer
+name: Windows ARM Installer
 run-name: ${{ inputs.cura_conan_version }} by @${{ github.actor }}
 
 on:
@@ -30,15 +30,14 @@ on:
       operating_system:
         description: 'OS'
         required: true
-        default: 'self-hosted-Windows-X64'
+        default: 'self-hosted-Windows-ARM64'
         type: choice
         options:
-          - self-hosted-Windows-X64
-          - windows-2022
+          - self-hosted-Windows-ARM64
 
 jobs:
   windows-installer:
-    uses: ultimaker/cura-workflows/.github/workflows/cura-installer-windows.yml@main
+    uses: ultimaker/cura-workflows/.github/workflows/cura-installer-windows-arm.yml@CURA-12814
     with:
       cura_conan_version: ${{ inputs.cura_conan_version }}
       package_overrides: ${{ inputs.package_overrides }}
