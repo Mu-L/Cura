@@ -146,7 +146,6 @@ pyinstaller:
       - [ "qt", "wayland", "compos" ]
       - [ "qt", "5", "compat" ]
       - [ "qt6bluetooth" ]
-      - [ "qt6dbus" ]
       - [ "qt6designer" ]
       - [ "qt6help" ]
       - [ "qt6nfc" ]
