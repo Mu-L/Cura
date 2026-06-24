@@ -175,7 +175,6 @@ pyinstaller:
       - patterns: ["qt6dbus"]
         oses: ["Windows"]
       - patterns: ["quick3d"]
-        oses: ["Windows"]
       - patterns: ["qt6quick3dxr"]
       - patterns: ["quick3d", "xr"]
       - patterns: ["qt6quick3dphysics"]
