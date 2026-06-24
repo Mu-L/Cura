@@ -73,7 +73,8 @@ a = Analysis(
 )
 
 # Filter unused Qt modules from all sources (Conan + PyQt6-bundled).
-a.binaries = TOC([(n, p, t) for n, p, t in a.binaries if not _QT_EXCL_LIB.search(p or n)])
+a.binaries = TOC([(n, p, t) for n, p, t in a.binaries
+                   if not _QT_EXCL_LIB.search(p or n) and not _QT_EXCL_PATH.search(p or n)])
 a.datas    = TOC([(n, p, t) for n, p, t in a.datas
                    if not _QT_EXCL_LIB.search(p or n) and not _QT_EXCL_PATH.search(p or n)])
 
