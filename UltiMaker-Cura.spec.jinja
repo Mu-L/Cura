@@ -22,40 +22,6 @@ binaries.extend([(str(bin), ".") for bin in Path(r"{{ venv_script_path }}").glob
 
 block_cipher = None
 
-# Modules excluded from the build. These are unused by Cura.
-# This filter runs after PyInstaller's Analysis phase, so it covers libraries discovered through
-# PyQt6's own bundled Qt copies as well as anything pulled in via Conan.
-# The conandata.yml blacklist handles the same set at the Conan-deploy stage; keeping both ensures
-# nothing slips through regardless of which path the library entered the bundle from.
-import re as _re
-
-# Matches Qt6 shared-library file names (e.g. libQt6Multimedia.so.6, Qt6Multimedia.dll)
-_QT_EXCL_LIB = _re.compile(
-    r"qt6bluetooth|qt6designer|qt6help|qt6nfc|qt6printsupport|qt6serialport"
-    r"|qt6spatialaudio|qt6sql|qt6test|qt6quicktest|qt6quicktimeline"
-    r"|qt6texttospeech|qt6webchannel|qt6websockets"
-    r"|qt6labsfolderlistmodel|qt6labsplatform|qt6labssettings|qt6labsqmlmodels"
-    r"|qt6labssharedimage|qt6labswavefrontmesh"
-    r"|qt6quickparticles|qt6quickvectorimage"
-    r"|qt6quick3dxr|qt6quick3dphysics|qt6quick3dspatialaudio"
-    r"|qt6multimedia|qt6pdf|qt6positioning|qt6remoteobjects|qt6sensors|qt6statemachine"
-    r"|libavcodec|libavformat|libavutil|libswresample|libswscale",
-    _re.IGNORECASE,
-)
-
-# Matches QML module directory path segments (no Qt6 prefix in dir names).
-# Used to strip the accompanying QML imports for the libraries excluded above.
-_QT_EXCL_PATH = _re.compile(
-    r"[/\\]QtMultimedia[/\\]|[/\\]QtPositioning[/\\]|[/\\]QtRemoteObjects[/\\]"
-    r"|[/\\]QtSensors[/\\]|[/\\]QtStateMachine[/\\]|[/\\]QtTextToSpeech[/\\]"
-    r"|[/\\]QtWebChannel[/\\]|[/\\]QtWebSockets[/\\]"
-    r"|[/\\]QtQuick3D[/\\]Xr(?:[/\\]|$)|[/\\]QtQuick3D[/\\]Physics[/\\]"
-    r"|[/\\]QtQuick3D[/\\]SpatialAudio[/\\]"
-    r"|[/\\]QtQuick[/\\]Timeline[/\\]|[/\\]QtQuick[/\\]Particles[/\\]"
-    r"|[/\\]QtQuick[/\\]VectorImage[/\\]|[/\\]QtQuick[/\\]Pdf[/\\]",
-    _re.IGNORECASE,
-)
-
 a = Analysis(
     [{{ entrypoint }}],
     pathex=[],
@@ -71,13 +37,6 @@ a = Analysis(
     cipher=block_cipher,
     noarchive=False
 )
-
-# Filter unused Qt modules from all sources (Conan + PyQt6-bundled).
-a.binaries = TOC([(n, p, t) for n, p, t in a.binaries
-                   if not _QT_EXCL_LIB.search(p or n) and not _QT_EXCL_PATH.search(p or n)])
-a.datas    = TOC([(n, p, t) for n, p, t in a.datas
-                   if not _QT_EXCL_LIB.search(p or n) and not _QT_EXCL_PATH.search(p or n)])
-
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 exe = EXE(
