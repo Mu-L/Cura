@@ -550,12 +550,18 @@ class CuraConan(ConanFile):
         cura_version = Version(version)
 
         # filter all binary files in binaries on the blacklist
-        # Each entry is either a plain list (legacy) or a dict with a 'patterns' key.
-        # The optional 'oses' key is used by the distribution cleanup script and ignored here.
+        # Each entry is either a plain list (legacy) or a dict with a 'patterns' key and optional 'oses'.
         blacklist = pyinstaller_metadata["blacklist"]
         def _bl_patterns(entry):
             return entry if isinstance(entry, list) else entry.get("patterns", [])
-        filtered_binaries = [b for b in binaries if not any([all([(part in b[0].lower()) for part in _bl_patterns(e)]) for e in blacklist])]
+        def _bl_oses(entry):
+            return entry.get("oses") if isinstance(entry, dict) else None
+        current_os = str(self.settings.os)
+        filtered_binaries = [b for b in binaries if not any(
+            (not _bl_oses(e) or current_os in _bl_oses(e))
+            and all(part in b[0].replace("\\", "/").lower() for part in _bl_patterns(e))
+            for e in blacklist
+        )]
 
         # In case the installer isn't actually pyinstaller (Windows at the moment), outright remove the offending files:
         specifically_delete = set(binaries) - set(filtered_binaries)
