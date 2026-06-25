@@ -551,17 +551,43 @@ class CuraConan(ConanFile):
 
         # filter all binary files in binaries on the blacklist
         # Each entry is either a plain list (legacy) or a dict with a 'patterns' key and optional 'oses'.
-        blacklist = pyinstaller_metadata["blacklist"]
-        def _bl_patterns(entry):
-            return entry if isinstance(entry, list) else entry.get("patterns", [])
-        def _bl_oses(entry):
-            return entry.get("oses") if isinstance(entry, dict) else None
+        blacklist = pyinstaller_metadata.get("blacklist", [])
         current_os = str(self.settings.os)
-        filtered_binaries = [b for b in binaries if not any(
-            (not _bl_oses(e) or current_os in _bl_oses(e))
-            and all(part in b[0].replace("\\", "/").lower() for part in _bl_patterns(e))
-            for e in blacklist
-        )]
+
+        def _get_rule_details(entry):
+            """Helper to normalize the entry format (Legacy list vs Dict)."""
+            if isinstance(entry, list):
+                return entry, []  # patterns, oses
+            return entry.get("patterns", []), entry.get("oses", [])
+
+        def _is_blacklisted(binary_path, blacklist, current_os):
+            """
+            Checks if a specific binary path matches any rule in the blacklist.
+            """
+            # Pre-normalize the binary path ONCE per binary
+            norm_path = binary_path.replace("\\", "/").lower()
+            
+            for entry in blacklist:
+                patterns, oses = _get_rule_details(entry)
+                
+                # If 'oses' is None, empty, or missing, it applies to ALL OSs.
+                # If 'oses' is present, current_os MUST be in it.
+                os_matches = not oses or (current_os in oses)
+                
+                if not os_matches:
+                    continue  # Skip this rule, it doesn't apply to this OS
+                    
+                # If all patterns in the rule are found in the path, it's a match!
+                if all(part.lower() in norm_path for part in patterns):
+                    return True # We found a match; this binary IS blacklisted
+                    
+            return False # No rules matched; this binary is safe
+
+        # We use the normalized path (b[0]) to check against the blacklist
+        filtered_binaries = [
+            b for b in binaries 
+            if not _is_blacklisted(b[0], blacklist, current_os)
+        ]
 
         # In case the installer isn't actually pyinstaller (Windows at the moment), outright remove the offending files:
         specifically_delete = set(binaries) - set(filtered_binaries)
