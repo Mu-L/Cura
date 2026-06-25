@@ -39,7 +39,7 @@ Cura.Menu
         {
             id: sub_menu
             title: model.name
-            shouldBeVisible: actions != null
+            shouldBeVisible: !!actions
             enabled: actions != null
             Instantiator
             {

@@ -37,7 +37,7 @@ on:
 
 jobs:
   windows-installer:
-    uses: ultimaker/cura-workflows/.github/workflows/cura-installer-windows-arm.yml@CURA-12814
+    uses: ultimaker/cura-workflows/.github/workflows/cura-installer-windows-arm.yml@main
     with:
       cura_conan_version: ${{ inputs.cura_conan_version }}
       package_overrides: ${{ inputs.package_overrides }}
