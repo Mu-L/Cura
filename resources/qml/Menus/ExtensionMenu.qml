@@ -39,7 +39,7 @@ Cura.Menu
         {
             id: sub_menu
             title: model.name
-            shouldBeVisible: actions !== undefined
+            shouldBeVisible: !!actions
             enabled: actions != null
             Instantiator
             {
@@ -58,7 +58,7 @@ Cura.Menu
             }
         }
 
-        onObjectAdded: function(index, object) { extensionMenu.insertMenu(index, object) }
-        onObjectRemoved: function(index, object) { extensionMenu.removeMenu(object)}
+        onObjectAdded: function(index, object) { if (object.shouldBeVisible) { extensionMenu.insertMenu(index, object) } }
+        onObjectRemoved: function(index, object) { extensionMenu.removeMenu(object) }
     }
 }
