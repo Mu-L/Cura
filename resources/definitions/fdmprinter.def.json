@@ -5137,6 +5137,7 @@
                     "unit": "s",
                     "type": "float",
                     "default_value": 10,
+                    "enabled": "cool_fan_enabled",
                     "maximum_value_warning": "600",
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
@@ -5166,6 +5167,7 @@
                     "maximum_value_warning": "10.0",
                     "settable_per_mesh": false,
                     "settable_per_extruder": true,
+                    "enabled": "cool_fan_enabled",
                     "children":
                     {
                         "cool_fan_full_layer":
