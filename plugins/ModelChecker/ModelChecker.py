@@ -129,8 +129,16 @@ class ModelChecker(QObject, Extension):
 
         warning_nodes = []
         for node in self.sliceableNodes():
+
+            # Check for any enabled support in the per-model settings.
+            if node.hasDecoration("getStack") and node.callDecoration("getStack").getValue("support_enable"):
+                continue
+
+            # Check if any support is painted on.
             if node.hasDecoration("getPaintedSupportTexels") and node.callDecoration("getPaintedSupportTexels"):
                 continue
+
+            # Actually check the model itself for any overhanging structures that'd need to be supported.
             if OverhangChecker.checkForDownFaces(node) or OverhangChecker.checkForDownVertices(node):
                 warning_nodes.append(node)
 
