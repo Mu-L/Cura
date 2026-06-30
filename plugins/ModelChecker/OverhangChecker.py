@@ -96,11 +96,9 @@ def checkForDownVertices(node: SceneNode) -> bool:
 
     verts_with_lower = dict()
     def _handle_edge(va: numpy.ndarray, vb: numpy.ndarray) -> None:
-        if min(float(va[1]), float(vb[1])) < close_to_buildplate:
+        if min(float(va[1]), float(vb[1])) < close_to_buildplate or va[1] == vb[1]:
             verts_with_lower[_to_hashable(va)] = False
             verts_with_lower[_to_hashable(vb)] = False
-            return
-        if va[1] == vb[1]:
             return
         verts_with_lower[_to_hashable(va if va[1] > vb[1] else vb)] = False
 

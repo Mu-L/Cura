@@ -109,6 +109,6 @@ class MultiMaterialExtruderConverter:
 
         texture.updateImagePart(image.rect())
 
-        node.callDecoration("setPaintedCountsDirty")
+        node.callDecoration("setPaintedCountsDirty", bit_mask)
 
         self.mainExtruderChanged.emit(node)

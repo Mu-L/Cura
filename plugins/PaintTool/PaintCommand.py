@@ -53,7 +53,7 @@ class PaintCommand(QUndoCommand):
 
     def _setPaintedCountsDirty(self) -> None:
         if self._sliceable_object_decorator is not None:
-            self._sliceable_object_decorator.setPaintedCountsDirty()
+            self._sliceable_object_decorator.setPaintedCountsDirty(self._bit_range)
 
     def _makeClearedTexture(self, extended = False) -> QPainter:
         painter = QPainter(self._texture.getImage())
