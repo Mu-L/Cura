@@ -5176,6 +5176,7 @@
                             "description": "The layer at which the fans spin on regular fan speed. If regular fan speed at height is set, this value is calculated and rounded to a whole number.",
                             "type": "int",
                             "default_value": 2,
+                            "enabled": "cool_fan_enabled",
                             "minimum_value": "1",
                             "maximum_value_warning": "10 / resolveOrValue('layer_height')",
                             "value": "max(1, int(math.floor((cool_fan_full_at_height - resolveOrValue('layer_height_0')) / resolveOrValue('layer_height')) + 2))",
