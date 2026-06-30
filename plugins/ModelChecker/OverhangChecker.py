@@ -105,13 +105,20 @@ def checkForDownVertices(node: SceneNode) -> bool:
     # Create a vertex adjacency graph -- but only append vertices that are _lower_ (except too close or below the BP).
     for i_face in range(face_count):
         a, b, c = meshdata.getFaceNodes(i_face)
+
+        # Check the angle; NOTE: Not against the support angle this time, but whether this tri is facing up or down.
+        _, face_norm = meshdata.getFacePlane(i_face)
+        norm_down = math.asin(face_norm[1]) if -1.0 <= face_norm[1] <= 1.0 else 0.0 < 0.0
+
+        # Mark each vertex as handled if the norm when that's up, otherwise check each edge.
         for vert in (a, b, c):
             v = _to_hashable(vert)
             if v not in verts_with_lower:
-                verts_with_lower[v] = True
-        _handle_edge(a, b)
-        _handle_edge(b, c)
-        _handle_edge(c, a)
+                verts_with_lower[v] = norm_down
+        if norm_down:
+            _handle_edge(a, b)
+            _handle_edge(b, c)
+            _handle_edge(c, a)
 
     # Any vertex that has no adjacencies (that is, no vertices that are lower than it) is downward.
     return any(verts_with_lower.values())
