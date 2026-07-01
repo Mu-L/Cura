@@ -2541,7 +2541,7 @@
                     "default_value": 100,
                     "value": "bridge_fan_speed",
                     "type": "float",
-                    "enabled": "skin_support",
+                    "enabled": "skin_support and cool_fan_enabled",
                     "settable_per_mesh": true,
                     "settable_per_extruder": true
                 },
@@ -5137,6 +5137,7 @@
                     "unit": "s",
                     "type": "float",
                     "default_value": 10,
+                    "enabled": "cool_fan_enabled",
                     "maximum_value_warning": "600",
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
@@ -5166,6 +5167,7 @@
                     "maximum_value_warning": "10.0",
                     "settable_per_mesh": false,
                     "settable_per_extruder": true,
+                    "enabled": "cool_fan_enabled",
                     "children":
                     {
                         "cool_fan_full_layer":
@@ -5174,6 +5176,7 @@
                             "description": "The layer at which the fans spin on regular fan speed. If regular fan speed at height is set, this value is calculated and rounded to a whole number.",
                             "type": "int",
                             "default_value": 2,
+                            "enabled": "cool_fan_enabled",
                             "minimum_value": "1",
                             "maximum_value_warning": "10 / resolveOrValue('layer_height')",
                             "value": "max(1, int(math.floor((cool_fan_full_at_height - resolveOrValue('layer_height_0')) / resolveOrValue('layer_height')) + 2))",
@@ -6516,7 +6519,7 @@
                     "description": "When enabled, the print cooling fan speed is altered for the skin regions immediately above the support.",
                     "type": "bool",
                     "default_value": false,
-                    "enabled": "support_enable or support_meshes_present",
+                    "enabled": "(support_enable or support_meshes_present) and cool_fan_enabled",
                     "settable_per_mesh": false
                 },
                 "support_supported_skin_fan_speed":
@@ -6528,7 +6531,7 @@
                     "maximum_value": "100",
                     "default_value": 100,
                     "type": "float",
-                    "enabled": "(support_enable or support_meshes_present) and support_fan_enable",
+                    "enabled": "(support_enable or support_meshes_present) and support_fan_enable and cool_fan_enabled",
                     "settable_per_mesh": false
                 },
                 "support_use_towers":
@@ -9207,7 +9210,7 @@
                     "maximum_value": "100",
                     "default_value": 100,
                     "type": "float",
-                    "enabled": "bridge_settings_enabled",
+                    "enabled": "bridge_settings_enabled and cool_fan_enabled",
                     "settable_per_mesh": true
                 },
                 "bridge_interlace_lines":
@@ -9277,7 +9280,7 @@
                     "maximum_value": "100",
                     "default_value": 0,
                     "type": "float",
-                    "enabled": "bridge_settings_enabled and bridge_enable_more_layers",
+                    "enabled": "bridge_settings_enabled and bridge_enable_more_layers and cool_fan_enabled",
                     "settable_per_mesh": true
                 },
                 "bridge_skin_speed_3":
@@ -9329,7 +9332,7 @@
                     "maximum_value": "100",
                     "default_value": 0,
                     "type": "float",
-                    "enabled": "bridge_settings_enabled and bridge_enable_more_layers",
+                    "enabled": "bridge_settings_enabled and bridge_enable_more_layers and cool_fan_enabled",
                     "settable_per_mesh": true
                 },
                 "clean_between_layers":
