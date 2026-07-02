@@ -320,8 +320,8 @@ class ThreeMFReader(MeshReader):
                 node_meshdata = um_node.getMeshData()
                 if node_meshdata is not None:
                     aabb = node_meshdata.getExtents(um_node.getWorldTransformation())
-                else:
-                    # For group nodes (no mesh data, but has children), use the combined bounding box of all children
+                elif len(um_node.getChildren()) > 0:
+                    # For group nodes, use the combined bounding box of all children
                     aabb = um_node.getBoundingBox()
                 if aabb is not None:
                     minimum_z_value = aabb.minimum.y  # y is z in transformation coordinates
