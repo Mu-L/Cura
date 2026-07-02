@@ -5921,7 +5921,7 @@
                     "type": "float",
                     "default_value": 16,
                     "value": "skirt_brim_line_width * skirt_brim_line_width * 100",
-                    "enabled": "support_brim_enable",
+                    "enabled": "(support_enable or support_meshes_present) and support_brim_enable",
                     "limit_to_extruder": "support_infill_extruder_nr",
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
