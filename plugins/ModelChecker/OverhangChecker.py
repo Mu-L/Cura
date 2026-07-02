@@ -14,7 +14,7 @@ from cura.Settings.GlobalStack import GlobalStack
 def getSupportAngle() -> float:
     """Retrieves the minimum angle needed in order for support to be generated in radians."""
     global_container_stack: GlobalStack = Application.getInstance().getGlobalContainerStack()
-    if not global_container_stack or not global_container_stack.getValue("support_enable"):
+    if not global_container_stack:
         return math.tau / 4.0
     extruder_nr = int(global_container_stack.getExtruderPositionValueWithDefault("support_extruder_nr"))
     if extruder_nr < 0 or extruder_nr >= len(global_container_stack.extruderList):
