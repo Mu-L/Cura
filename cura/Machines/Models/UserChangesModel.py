@@ -13,6 +13,8 @@ from UM.i18n import i18nCatalog
 from UM.Settings.SettingFunction import SettingFunction
 from UM.Qt.ListModel import ListModel
 
+catalog = i18nCatalog("cura")
+
 
 class UserChangesModel(ListModel):
     KeyRole = Qt.ItemDataRole.UserRole + 1
@@ -34,6 +36,37 @@ class UserChangesModel(ListModel):
         self._i18n_catalog = None
 
         self._update()
+
+    def _getDisplayValue(self, setting_key: str, value, stack) -> str:
+        """Convert a raw setting value to the display string shown in the UI."""
+        if value is None:
+            return ""
+        setting_type = stack.getProperty(setting_key, "type")
+
+        if setting_type in ("extruder", "optional_extruder"):
+            try:
+                int_value = int(value)
+            except (ValueError, TypeError):
+                return str(value)
+            if int_value == -1:
+                # Auto has been chosen based on the defined requirements, otherwise the value should be 'Not overridden'
+                return catalog.i18nc("@menuitem", "Auto")
+            global_stack = Application.getInstance().getMachineManager().activeMachine
+            if global_stack and 0 <= int_value < len(global_stack.extruderList):
+                return global_stack.extruderList[int_value].getName()
+            return str(int_value + 1)
+
+        if setting_type == "enum":
+            options = stack.getProperty(setting_key, "options")
+            if options:
+                str_value = str(value)
+                option_label = options.get(str_value) or options.get(value)
+                if option_label:
+                    if self._i18n_catalog:
+                        return self._i18n_catalog.i18nc(f"{setting_key} option {str_value}", option_label)
+                    return option_label
+
+        return str(value)
 
     @pyqtSlot()
     def forceUpdate(self):
@@ -57,15 +90,15 @@ class UserChangesModel(ListModel):
         definition = global_stack.getBottom()
 
         definition_suffix = ContainerRegistry.getMimeTypeForContainer(type(definition)).preferredSuffix
-        catalog = i18nCatalog(os.path.basename(definition.getId() + "." + definition_suffix))
+        definition_catalog = i18nCatalog(os.path.basename(definition.getId() + "." + definition_suffix))
 
-        if catalog.hasTranslationLoaded():
-            self._i18n_catalog = catalog
+        if definition_catalog.hasTranslationLoaded():
+            self._i18n_catalog = definition_catalog
 
         for file_name in definition.getInheritedFiles():
-            catalog = i18nCatalog(os.path.basename(file_name))
-            if catalog.hasTranslationLoaded():
-                self._i18n_catalog = catalog
+            definition_catalog = i18nCatalog(os.path.basename(file_name))
+            if definition_catalog.hasTranslationLoaded():
+                self._i18n_catalog = definition_catalog
 
         for stack in stacks:
             # Make a list of all containers in the stack.
@@ -121,8 +154,8 @@ class UserChangesModel(ListModel):
                 item_to_add = {
                     "key": setting_key,
                     "label": label,
-                    "user_value": str(user_changes.getProperty(setting_key, "value", default_value_resolve_context)),
-                    "original_value": str(original_value),
+                    "user_value": self._getDisplayValue(setting_key, user_changes.getProperty(setting_key, "value", default_value_resolve_context), stack),
+                    "original_value": self._getDisplayValue(setting_key, original_value, stack),
                     "extruder": "",
                     "category": category_label,
                 }
