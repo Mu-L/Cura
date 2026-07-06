@@ -13,8 +13,6 @@ from UM.i18n import i18nCatalog
 from UM.Settings.SettingFunction import SettingFunction
 from UM.Qt.ListModel import ListModel
 
-catalog = i18nCatalog("cura")
-
 
 class UserChangesModel(ListModel):
     KeyRole = Qt.ItemDataRole.UserRole + 1
@@ -38,35 +36,9 @@ class UserChangesModel(ListModel):
         self._update()
 
     def _getDisplayValue(self, setting_key: str, value, stack) -> str:
-        """Convert a raw setting value to the display string shown in the UI."""
-        if value is None:
-            return ""
-        setting_type = stack.getProperty(setting_key, "type")
-
-        if setting_type in ("extruder", "optional_extruder"):
-            try:
-                int_value = int(value)
-            except (ValueError, TypeError):
-                return str(value)
-            if int_value == -1:
-                # Auto has been chosen based on the defined requirements, otherwise the value should be 'Not overridden'
-                return catalog.i18nc("@menuitem", "Auto")
-            global_stack = Application.getInstance().getMachineManager().activeMachine
-            if global_stack and 0 <= int_value < len(global_stack.extruderList):
-                return global_stack.extruderList[int_value].getName()
-            return str(int_value + 1)
-
-        if setting_type == "enum":
-            options = stack.getProperty(setting_key, "options")
-            if options:
-                str_value = str(value)
-                option_label = options.get(str_value) or options.get(value)
-                if option_label:
-                    if self._i18n_catalog:
-                        return self._i18n_catalog.i18nc(f"{setting_key} option {str_value}", option_label)
-                    return option_label
-
-        return str(value)
+        return Application.getInstance().getCuraAPI().interface.settings.getSettingDisplayValue(
+            setting_key, value, stack, self._i18n_catalog
+        )
 
     @pyqtSlot()
     def forceUpdate(self):
