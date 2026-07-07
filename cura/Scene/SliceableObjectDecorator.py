@@ -35,7 +35,7 @@ class SliceableObjectDecorator(SceneNodeDecorator):
         self.paintTextureChanged = Signal()
 
         self._texture_change_timer: Optional[QTimer] = None
-        self._texture_bitrange_maybe_dirty: Optional[tuple[int, int]] = None
+        self._texture_bitflags_maybe_dirty: int = 0b0
 
     def setNode(self, node: "SceneNode") -> None:
         if self._node is not None:
@@ -71,13 +71,9 @@ class SliceableObjectDecorator(SceneNodeDecorator):
             self._texture_change_timer.setSingleShot(True)
             self._texture_change_timer.timeout.connect(self._onTextureChangeTimerFinished)
 
-        if self._texture_bitrange_maybe_dirty is None:
-            self._texture_bitrange_maybe_dirty = bitrange
-        else:
-            self._texture_bitrange_maybe_dirty = (
-                min(self._texture_bitrange_maybe_dirty[0], bitrange[0]),
-                max(self._texture_bitrange_maybe_dirty[1], bitrange[1])
-            )
+        for i in range(bitrange[0], bitrange[1] + 1):
+           self._texture_bitflags_maybe_dirty |= 0b1 << i
+
         self._texture_change_timer.start()
 
     def _onTextureChangeTimerFinished(self) -> None:
@@ -94,18 +90,19 @@ class SliceableObjectDecorator(SceneNodeDecorator):
 
         def bitrange_dirty(name: str) -> bool:
             named_range = self._texture_data_mapping.get(name, None)
-            return (
-                named_range is not None and self._texture_bitrange_maybe_dirty is not None and
-                named_range[0] <= self._texture_bitrange_maybe_dirty[1] and
-                self._texture_bitrange_maybe_dirty[0] <= named_range[1]
-            )
+            if named_range is None:
+                return False
+            named_bitflags = 0b0
+            for i in range(named_range[0], named_range[1] + 1):
+                named_bitflags |= 0b1 << i
+            return (named_bitflags & self._texture_bitflags_maybe_dirty) != 0b0
 
         if "extruder" in self._texture_data_mapping and bitrange_dirty("extruder"):
             self._updatePaintedExtruders(image_array)
         if "support" in self._texture_data_mapping and bitrange_dirty("support"):
             self._updatePaintedSupport(image_array)
 
-        self._texture_bitrange_maybe_dirty = SliceableObjectDecorator.EMPTY_BITRANGE
+        self._texture_bitflags_maybe_dirty = 0b0
 
         from cura.CuraApplication import CuraApplication
         CuraApplication.getInstance().globalContainerStackChanged.emit()
@@ -122,7 +119,7 @@ class SliceableObjectDecorator(SceneNodeDecorator):
     def _updatePaintedSupport(self, image_array) -> None:
         bit_range_start, bit_range_end = self._texture_data_mapping["support"]
         # We only need the 'allow' bit; 'dissallow' or 'no value' don't change wether or not support will be generated.
-        bit_mask = 0x1 << bit_range_start
+        bit_mask = 0b1 << bit_range_start
         self._painted_support_texels = numpy.any(image_array & bit_mask)
 
     def setPaintTexture(self, texture: Texture) -> None:
