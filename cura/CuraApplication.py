@@ -175,8 +175,8 @@ class CuraApplication(QtApplication):
 
         self.default_theme = "cura-light"
 
-        self.change_log_url = "https://ultimaker.com/ultimaker-cura-latest-features?utm_source=cura&utm_medium=software&utm_campaign=cura-update-features"
-        self.beta_change_log_url = "https://ultimaker.com/ultimaker-cura-beta-features?utm_source=cura&utm_medium=software&utm_campaign=cura-update-features"
+        self.change_log_url = "https://ultimaker.com/ultimaker-cura-latest-features"
+        self.beta_change_log_url = "https://ultimaker.com/ultimaker-cura-beta-features"
 
         self._boot_loading_time = time.time()
 
@@ -1590,7 +1590,13 @@ class CuraApplication(QtApplication):
             if node.callDecoration("getBuildPlateNumber") == active_build_plate:
                 # Skip nodes that are too big
                 bounding_box = node.getBoundingBox()
-                if bounding_box is None or bounding_box.width < self._volume.getBoundingBox().width or bounding_box.depth < self._volume.getBoundingBox().depth:
+                volume_bounding_box = self._volume.getBoundingBox()
+                if volume_bounding_box is None:
+                    Logger.warning("_arrangeAll: build volume bounding box is None — rebuild not yet triggered. Requesting rebuild and aborting arrange.")
+                    # Trigger a rebuild now and bail out; the user can retry arrange once the volume is ready.
+                    self._volume.rebuild()
+                    return
+                if bounding_box is None or bounding_box.width < volume_bounding_box.width or bounding_box.depth < volume_bounding_box.depth:
                     # Arrange only the unlocked nodes and keep the locked ones in place
                     if node.getSetting(SceneNodeSettings.LockPosition):
                         locked_nodes.append(node)

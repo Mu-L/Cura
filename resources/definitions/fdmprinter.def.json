@@ -2481,7 +2481,7 @@
                     "description": "Print a solid infill pattern just below skin to avoid printing the skin over air.",
                     "type": "bool",
                     "default_value": true,
-                    "value": "infill_sparse_density < 40",
+                    "value": "infill_sparse_density < 40 and gradual_infill_steps == 0 and infill_sparse_thickness == layer_height",
                     "enabled": "infill_sparse_density > 0 and top_layers > 0",
                     "settable_per_mesh": true,
                     "settable_per_extruder": true
@@ -2541,7 +2541,7 @@
                     "default_value": 100,
                     "value": "bridge_fan_speed",
                     "type": "float",
-                    "enabled": "skin_support",
+                    "enabled": "skin_support and cool_fan_enabled",
                     "settable_per_mesh": true,
                     "settable_per_extruder": true
                 },
@@ -5137,6 +5137,7 @@
                     "unit": "s",
                     "type": "float",
                     "default_value": 10,
+                    "enabled": "cool_fan_enabled",
                     "maximum_value_warning": "600",
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
@@ -5166,6 +5167,7 @@
                     "maximum_value_warning": "10.0",
                     "settable_per_mesh": false,
                     "settable_per_extruder": true,
+                    "enabled": "cool_fan_enabled",
                     "children":
                     {
                         "cool_fan_full_layer":
@@ -5174,6 +5176,7 @@
                             "description": "The layer at which the fans spin on regular fan speed. If regular fan speed at height is set, this value is calculated and rounded to a whole number.",
                             "type": "int",
                             "default_value": 2,
+                            "enabled": "cool_fan_enabled",
                             "minimum_value": "1",
                             "maximum_value_warning": "10 / resolveOrValue('layer_height')",
                             "value": "max(1, int(math.floor((cool_fan_full_at_height - resolveOrValue('layer_height_0')) / resolveOrValue('layer_height')) + 2))",
@@ -5918,7 +5921,7 @@
                     "type": "float",
                     "default_value": 16,
                     "value": "skirt_brim_line_width * skirt_brim_line_width * 100",
-                    "enabled": "support_brim_enable",
+                    "enabled": "(support_enable or support_meshes_present) and support_brim_enable",
                     "limit_to_extruder": "support_infill_extruder_nr",
                     "settable_per_mesh": false,
                     "settable_per_extruder": true
@@ -6516,7 +6519,7 @@
                     "description": "When enabled, the print cooling fan speed is altered for the skin regions immediately above the support.",
                     "type": "bool",
                     "default_value": false,
-                    "enabled": "support_enable or support_meshes_present",
+                    "enabled": "(support_enable or support_meshes_present) and cool_fan_enabled",
                     "settable_per_mesh": false
                 },
                 "support_supported_skin_fan_speed":
@@ -6528,7 +6531,7 @@
                     "maximum_value": "100",
                     "default_value": 100,
                     "type": "float",
-                    "enabled": "(support_enable or support_meshes_present) and support_fan_enable",
+                    "enabled": "(support_enable or support_meshes_present) and support_fan_enable and cool_fan_enabled",
                     "settable_per_mesh": false
                 },
                 "support_use_towers":
@@ -6605,6 +6608,21 @@
                     "settable_per_mesh": false,
                     "settable_per_extruder": false,
                     "settable_per_meshgroup": false
+                },
+                "support_paint_resolution":
+                {
+                    "label": "Support Painting Precision",
+                    "description": "The precision of the details when generating support based on painting data. A lower precision will provide more details, but increase the slicing time and memory.",
+                    "unit": "mm",
+                    "type": "float",
+                    "enabled": "support_enable",
+                    "default_value": 0.8,
+                    "value": "min(line_width, layer_height * 2)",
+                    "minimum_value": "0.05",
+                    "maximum_value": "10",
+                    "maximum_value_warning": "line_width * 10",
+                    "settable_per_mesh": true,
+                    "settable_per_extruder": true
                 }
             }
         },
@@ -9192,7 +9210,7 @@
                     "maximum_value": "100",
                     "default_value": 100,
                     "type": "float",
-                    "enabled": "bridge_settings_enabled",
+                    "enabled": "bridge_settings_enabled and cool_fan_enabled",
                     "settable_per_mesh": true
                 },
                 "bridge_interlace_lines":
@@ -9262,7 +9280,7 @@
                     "maximum_value": "100",
                     "default_value": 0,
                     "type": "float",
-                    "enabled": "bridge_settings_enabled and bridge_enable_more_layers",
+                    "enabled": "bridge_settings_enabled and bridge_enable_more_layers and cool_fan_enabled",
                     "settable_per_mesh": true
                 },
                 "bridge_skin_speed_3":
@@ -9314,7 +9332,7 @@
                     "maximum_value": "100",
                     "default_value": 0,
                     "type": "float",
-                    "enabled": "bridge_settings_enabled and bridge_enable_more_layers",
+                    "enabled": "bridge_settings_enabled and bridge_enable_more_layers and cool_fan_enabled",
                     "settable_per_mesh": true
                 },
                 "clean_between_layers":
