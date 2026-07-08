@@ -113,7 +113,7 @@ class ModelChecker(QObject, Extension):
         self._last_checker_job = ModelCheckerJob(self._caution_message, self._unhandled_slice)
         self._last_checker_job.needsRetry.connect(lambda: self.onChanged.emit())
         self._last_checker_job.finished.connect(self._onCheckerJobFinished)
-        self._last_checker_job.run()
+        self._last_checker_job.start()
 
         self._unhandled_slice = False
 
