@@ -1,16 +1,21 @@
 name: printer-linter-pr-diagnose
 
 on:
+  push:
+    branches:
+      - CURA-11257
+    paths:
+      - "resources/**"
   workflow_dispatch:
     inputs:
       branch:
         description: 'Target branch to run the workflow on'
         required: false
-        default: 'main'
+        default: 'CURA-11257'
       printer:
         description: 'Printer name to lint all related files (e.g. ultimaker_s5). Runs instead of the PR diff when set.'
         required: false
-        default: ''
+        default: 'ultimaker_s5'
   pull_request:
     paths:
       - "resources/**"
