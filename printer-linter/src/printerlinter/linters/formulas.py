@@ -99,12 +99,20 @@ class Formulas(Linter):
                     if value in ("enable", "resolve", "value", "minimum_value_warning", "maximum_value_warning",
                             "maximum_value", "minimum_value"):
                         key_incorrect = self.checkValueIncorrect(key)
+                        key_correction = self._correct_formula if key_incorrect else None
                         if key_incorrect:
                             found = self._appendCorrections(key, key)
+
                         value_incorrect = self.checkValueIncorrect(value_dict[value])
+                        value_correction = self._correct_formula if value_incorrect else None
                         if value_incorrect:
                             found = self._appendCorrections(key, value_dict[value])
+
                         if key_incorrect or value_incorrect:
+                            if key_incorrect:
+                                message = f"Setting name '{key}' seems incorrect, did you mean '{key_correction}'?"
+                            else:
+                                message = f"Value '{value_dict[value]}' for setting '{key}' seems incorrect, did you mean '{value_correction}'?"
 
                             if len(found.group().splitlines()) > 1:
                                 replacements = []
@@ -117,7 +125,7 @@ class Formulas(Linter):
                             yield Diagnostic(
                                 file=self._file,
                                 diagnostic_name="diagnostic-incorrect-formula",
-                                message=f"Given formula {found.group()} seems incorrect, Do you mean {self._correct_formula}? please correct the formula and try again.",
+                                message=message,
                                 level="Error",
                                 offset=found.span(0)[0],
                                 replacements=replacements
