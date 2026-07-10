@@ -41,6 +41,14 @@ FORMULA_NAMES = [
 
 DELIMITERS = [r'\+', '-', '=', '/', '\*', r'\(', r'\)', r'\[', r'\]', '{', '}', ' ', '^']
 
+# Python keywords and builtins that appear in Cura formulas and must never be
+# treated as potential typos of setting names or formula functions.
+PYTHON_KEYWORDS = {
+    'if', 'else', 'elif', 'not', 'in', 'and', 'or', 'is',
+    'True', 'False', 'None',
+    'for', 'while', 'return', 'lambda',
+}
+
 
 class Formulas(Linter):
     """Finds Typos in the definition files and their formulas."""
@@ -179,8 +187,16 @@ class Formulas(Linter):
         for token in tokens:
             if '(' not in token and ')' not in token:
                 cleaned_token = re.sub(r'[^\w\s]', '', token)
+                # Skip empty tokens, pure numbers, and Python keywords — these
+                # are never setting-name typos and produce false positives
+                # (e.g. 'in' fuzzy-matches 'sin' with ratio exactly 0.8, which
+                # then corrupts every word containing 'in' such as 'infill').
+                if not cleaned_token or cleaned_token.isnumeric() or cleaned_token in PYTHON_KEYWORDS:
+                    continue
                 possible_matches = difflib.get_close_matches(cleaned_token, self._cura_correction_strings, n=1, cutoff=0.8)
                 if possible_matches:
-                    output = output.replace(cleaned_token, possible_matches[0])
+                    # Use word-boundary replacement so that a short token such
+                    # as 'if' cannot corrupt a longer word that contains it.
+                    output = re.sub(r'\b' + re.escape(cleaned_token) + r'\b', possible_matches[0], output)
         return output
 
