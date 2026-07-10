@@ -101,34 +101,45 @@ class Formulas(Linter):
                         key_incorrect = self.checkValueIncorrect(key)
                         key_correction = self._correct_formula if key_incorrect else None
                         if key_incorrect:
-                            found = self._appendCorrections(key, key)
+                            key_found = self._appendCorrections(key, key)
+                            key_replacement_text = self._replacement_text
+                            if len(key_found.group().splitlines()) > 1:
+                                key_replacements = []
+                            else:
+                                key_replacements = [Replacement(
+                                    file=self._file,
+                                    offset=key_found.span(1)[0],
+                                    length=len(key_found.group()),
+                                    replacement_text=key_replacement_text)]
+                            yield Diagnostic(
+                                file=self._file,
+                                diagnostic_name="diagnostic-incorrect-formula",
+                                message=f"Setting name '{key}' seems incorrect, did you mean '{key_correction}'?",
+                                level="Error",
+                                offset=key_found.span(0)[0],
+                                replacements=key_replacements
+                            )
 
                         value_incorrect = self.checkValueIncorrect(value_dict[value])
                         value_correction = self._correct_formula if value_incorrect else None
                         if value_incorrect:
-                            found = self._appendCorrections(key, value_dict[value])
-
-                        if key_incorrect or value_incorrect:
-                            if key_incorrect:
-                                message = f"Setting name '{key}' seems incorrect, did you mean '{key_correction}'?"
+                            value_found = self._appendCorrections(key, value_dict[value])
+                            value_replacement_text = self._replacement_text
+                            if len(value_found.group().splitlines()) > 1:
+                                value_replacements = []
                             else:
-                                message = f"Value '{value_dict[value]}' for setting '{key}' seems incorrect, did you mean '{value_correction}'?"
-
-                            if len(found.group().splitlines()) > 1:
-                                replacements = []
-                            else:
-                                replacements = [Replacement(
+                                value_replacements = [Replacement(
                                     file=self._file,
-                                    offset=found.span(1)[0],
-                                    length=len(found.group()),
-                                    replacement_text=self._replacement_text)]
+                                    offset=value_found.span(1)[0],
+                                    length=len(value_found.group()),
+                                    replacement_text=value_replacement_text)]
                             yield Diagnostic(
                                 file=self._file,
                                 diagnostic_name="diagnostic-incorrect-formula",
-                                message=message,
+                                message=f"Value '{value_dict[value]}' for setting '{key}' seems incorrect, did you mean '{value_correction}'?",
                                 level="Error",
-                                offset=found.span(0)[0],
-                                replacements=replacements
+                                offset=value_found.span(0)[0],
+                                replacements=value_replacements
                             )
 
         yield
