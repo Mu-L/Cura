@@ -27,8 +27,7 @@ jobs:
       - name: Setup the build environment
         uses: ultimaker/cura-workflows/.github/actions/setup-build-environment@main
         with:
-          branch: ${{ inputs.branch }}
-
+          branch: ${{ github.event.inputs.branch || 'main' }}
       - uses: greguintow/get-diff-action@v7
         with:
           DIFF_FILTER: AMRCD
@@ -40,9 +39,9 @@ jobs:
         run: mkdir printer-linter-result
 
       - name: Collect printer files specified by input (UM only, optional)
-        if: inputs.printer != ''
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.printer != '' }}
         run: |
-          PRINTER="${{ inputs.printer }}"
+          PRINTER="${{ github.event.inputs.printer }}"
           FILES=$(find resources \( \
             -path "resources/definitions/${PRINTER}.def.json" \
             -o -path "resources/extruders/${PRINTER}_*.def.json" \
@@ -53,7 +52,7 @@ jobs:
           echo "PRINTER_FILES=$FILES" >> "$GITHUB_ENV"
 
       - name: Diagnose printer file(s) specified by input (UM only, optional)
-        if: inputs.printer != ''
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.printer != '' }}
         run: python printer-linter/src/terminal.py --diagnose --report printer-linter-result/fixes.yml ${{ env.PRINTER_FILES }}
 
       - name: Diagnose file(s)
