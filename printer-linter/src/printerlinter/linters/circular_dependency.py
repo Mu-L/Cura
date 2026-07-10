@@ -2,7 +2,7 @@ import json
 import re
 from configparser import ConfigParser
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Set
+from typing import ClassVar, Dict, Iterator, List, Optional, Set
 
 from ..diagnostic import Diagnostic
 from .linter import Linter
@@ -20,6 +20,8 @@ class CircularDependency(Linter):
     Combined, this creates the cycle ``bridge_wall_speed -> bridge_skin_speed ->
     bridge_wall_speed``, which will cause infinite recursion at runtime.
     """
+
+    _setting_names_cache: ClassVar[Optional[Set[str]]] = None
 
     def __init__(self, file: Path, settings: dict) -> None:
         super().__init__(file, settings)
@@ -265,7 +267,15 @@ class CircularDependency(Linter):
         return None
 
     def _load_all_setting_names(self) -> None:
-        """Populate ``_all_setting_names`` from the two base definition files."""
+        """Populate ``_all_setting_names`` from the two base definition files.
+
+        The result is cached at class level so the two base JSON files are only
+        read and parsed once, regardless of how many ``CircularDependency``
+        instances are created during a linting run.
+        """
+        if CircularDependency._setting_names_cache is not None:
+            self._all_setting_names = CircularDependency._setting_names_cache
+            return
         defs_dir = self._find_definitions_dir()
         if defs_dir is None:
             return
@@ -274,6 +284,7 @@ class CircularDependency(Linter):
             if f.exists():
                 data = json.loads(f.read_text())
                 self._collect_setting_keys(data.get("settings", {}))
+        CircularDependency._setting_names_cache = self._all_setting_names
 
     def _collect_setting_keys(self, settings_obj: dict) -> None:
         """Recursively collect all setting keys from a settings tree."""

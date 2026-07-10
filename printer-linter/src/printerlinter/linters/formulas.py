@@ -108,7 +108,7 @@ class Formulas(Linter):
                             else:
                                 key_replacements = [Replacement(
                                     file=self._file,
-                                    offset=key_found.span(1)[0],
+                                    offset=key_found.span(0)[0],
                                     length=len(key_found.group()),
                                     replacement_text=key_replacement_text)]
                             yield Diagnostic(
@@ -130,7 +130,7 @@ class Formulas(Linter):
                             else:
                                 value_replacements = [Replacement(
                                     file=self._file,
-                                    offset=value_found.span(1)[0],
+                                    offset=value_found.span(0)[0],
                                     length=len(value_found.group()),
                                     replacement_text=value_replacement_text)]
                             yield Diagnostic(
