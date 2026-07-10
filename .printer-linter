@@ -8,6 +8,7 @@ checks:
     diagnostic-resource-file-deleted: true
     diagnostic-material-temperature-defined: false
     diagnostic-long-profile-names: true
+    diagnostic-circular-dependency: true
 fixes:
     diagnostic-definition-redundant-override: true
 format:
