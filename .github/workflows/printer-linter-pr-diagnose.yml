@@ -1,6 +1,16 @@
 name: printer-linter-pr-diagnose
 
 on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Target branch to run the workflow on'
+        required: false
+        default: 'main'
+      printer:
+        description: 'Printer name to lint all related files (e.g. ultimaker_s5). Runs instead of the PR diff when set.'
+        required: false
+        default: ''
   pull_request:
     paths:
       - "resources/**"
@@ -16,6 +26,8 @@ jobs:
     steps:
       - name: Setup the build environment
         uses: ultimaker/cura-workflows/.github/actions/setup-build-environment@main
+        with:
+          branch: ${{ inputs.branch }}
 
       - uses: greguintow/get-diff-action@v7
         with:
@@ -26,6 +38,23 @@ jobs:
 
       - name: Create results directory
         run: mkdir printer-linter-result
+
+      - name: Collect printer files specified by input (UM only, optional)
+        if: inputs.printer != ''
+        run: |
+          PRINTER="${{ inputs.printer }}"
+          FILES=$(find resources \( \
+            -path "resources/definitions/${PRINTER}.def.json" \
+            -o -path "resources/extruders/${PRINTER}_*.def.json" \
+            -o -path "resources/quality/${PRINTER}/*.inst.cfg" \
+            -o -path "resources/variants/${PRINTER}*.inst.cfg" \
+            -o -path "resources/intent/${PRINTER}/*.inst.cfg" \
+          \) -type f | tr '\n' ' ')
+          echo "PRINTER_FILES=$FILES" >> "$GITHUB_ENV"
+
+      - name: Diagnose printer file(s) specified by input (UM only, optional)
+        if: inputs.printer != ''
+        run: python printer-linter/src/terminal.py --diagnose --report printer-linter-result/fixes.yml ${{ env.PRINTER_FILES }}
 
       - name: Diagnose file(s)
         if: env.GIT_DIFF && !env.MATCHED_FILES
