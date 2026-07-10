@@ -47,7 +47,14 @@ class CircularDependency(Linter):
     # ------------------------------------------------------------------
 
     def _check_profile(self) -> Iterator[Diagnostic]:
-        """Check a .inst.cfg quality/material/variant profile for circular dependencies."""
+        """Check a .inst.cfg quality/material/variant profile for circular dependencies.
+
+        Profile constant overrides (e.g. ``bridge_wall_speed = 30``) are intentionally
+        **excluded** from the dependency graph.  Cura exposes a "reset to formula"
+        button for every setting, so a constant can always be reverted to the
+        ancestor definition's ``value`` formula.  Only formula-based overrides
+        (values that start with ``=``) are applied on top of the definition chain.
+        """
         config = ConfigParser()
         config.read([self._file])
 
@@ -60,30 +67,41 @@ class CircularDependency(Linter):
             return
 
         def_file = defs_dir / f"{def_name}.def.json"
-        value_map = self._build_value_map_from_def_hierarchy(def_file)
+        # Start from the *definition chain* graph — constant overrides in the
+        # profile do NOT remove these edges.
+        def_value_map = self._build_value_map_from_def_hierarchy(def_file)
+        graph = self._build_graph(def_value_map)
 
-        # Overlay this profile's own [values] on top of the definition chain.
-        profile_keys: Set[str] = set()
+        # Overlay only the profile's *formula* overrides (``= …`` values).
+        # These genuinely change which setting a key depends on.
+        profile_formula_keys: Set[str] = set()
         if config.has_section("values"):
             for key in config.options("values"):
-                value_map[key] = config.get("values", key)
-                profile_keys.add(key)
+                val = config.get("values", key)
+                if val.startswith("="):
+                    refs = self._extract_references(val)
+                    if refs:
+                        graph[key] = refs
+                    elif key in graph:
+                        del graph[key]
+                    profile_formula_keys.add(key)
 
-        graph = self._build_graph(value_map)
         cycle = self._detect_cycle(graph)
 
-        # Only report when at least one node in the cycle was introduced by this
-        # profile; otherwise the cycle belongs to a parent definition file.
-        if cycle and any(node in profile_keys for node in cycle):
+        # Only report when at least one formula-override in this profile is part
+        # of the cycle; otherwise the cycle already existed in the definition.
+        if cycle and any(node in profile_formula_keys for node in cycle):
             content = self._file.read_text()
-            offset = self._find_offset_for_cycle_node(content, cycle, profile_keys)
+            offset = self._find_offset_for_cycle_node(content, cycle, profile_formula_keys)
             yield Diagnostic(
                 file=self._file,
                 diagnostic_name="diagnostic-circular-dependency",
                 message=(
                     f"Circular dependency detected across settings: {' -> '.join(cycle)}. "
-                    f"This profile overrides a setting that creates a cycle with an "
-                    f"inherited value."
+                    f"This profile sets a formula override that forms a cycle with the "
+                    f"inherited definition value. Even if a constant override currently "
+                    f"hides the cycle, resetting any setting in the cycle to its formula "
+                    f"will cause infinite recursion."
                 ),
                 level="Error",
                 offset=offset,
