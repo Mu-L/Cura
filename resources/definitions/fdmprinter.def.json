@@ -1721,7 +1721,7 @@
                                     "maximum_value": "999999",
                                     "type": "int",
                                     "minimum_value_warning": "2",
-                                    "value": "int(round(top_thickness / resolveOrValue('layer_height'), 4))",
+                                    "value": "math.ceil(round(top_thickness / resolveOrValue('layer_height'), 4))",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": true
                                 }
@@ -1751,7 +1751,7 @@
                                     "default_value": 6,
                                     "maximum_value": "999999",
                                     "type": "int",
-                                    "value": "int(round(bottom_thickness / resolveOrValue('layer_height'), 4))",
+                                    "value": "math.ceil(round(bottom_thickness / resolveOrValue('layer_height'), 4))",
                                     "limit_to_extruder": "top_bottom_extruder_nr",
                                     "settable_per_mesh": true
                                 },
