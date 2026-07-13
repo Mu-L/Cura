@@ -1,7 +1,7 @@
 # Copyright (c) 2024 UltiMaker
 # Cura is released under the terms of the LGPLv3 or higher.
 
-from typing import Dict, List, Union
+from typing import Dict, List
 
 from UM.Decorators import deprecated
 from UM.Logger import Logger
