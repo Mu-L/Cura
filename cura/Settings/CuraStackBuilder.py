@@ -64,7 +64,7 @@ class CuraStackBuilder:
         extruder_dict = machine_definition.getMetaDataEntry("machine_extruder_trains")
         for position in extruder_dict:
             try:
-                cls.createExtruderStackWithDefaultSetup(new_global_stack, position)
+                cls.createExtruderStackWithDefaultSetup(new_global_stack, int(position))
             except IndexError as e:
                 Logger.logException("e", "Failed to create an extruder stack for position {pos}: {err}".format(pos = position, err = str(e)))
                 return None
