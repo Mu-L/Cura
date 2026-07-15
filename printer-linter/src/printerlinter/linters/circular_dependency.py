@@ -34,19 +34,11 @@ class CircularDependency(Linter):
                 yield check
         yield
 
-    # ------------------------------------------------------------------
-    # Public check entry-point
-    # ------------------------------------------------------------------
-
     def checkCircularDependencies(self) -> Iterator[Diagnostic]:
         if self._file.suffix == ".cfg":
             yield from self._check_profile()
         elif self._file.suffix == ".json":
             yield from self._check_definition()
-
-    # ------------------------------------------------------------------
-    # Per-file type checks
-    # ------------------------------------------------------------------
 
     def _check_profile(self) -> Iterator[Diagnostic]:
         """Check a .inst.cfg quality/material/variant profile for circular dependencies.
@@ -142,10 +134,6 @@ class CircularDependency(Linter):
                 offset=offset,
             )
 
-    # ------------------------------------------------------------------
-    # Graph construction & cycle detection
-    # ------------------------------------------------------------------
-
     def _build_graph(self, value_map: Dict[str, str]) -> Dict[str, Set[str]]:
         """Build a directed dependency graph from a setting-name -> formula map."""
         graph: Dict[str, Set[str]] = {}
@@ -187,10 +175,6 @@ class CircularDependency(Linter):
                     return result
         return None
 
-    # ------------------------------------------------------------------
-    # Formula parsing helpers
-    # ------------------------------------------------------------------
-
     def _extract_references(self, formula) -> Set[str]:
         """Return the set of known setting names referenced by *formula*.
 
@@ -205,10 +189,6 @@ class CircularDependency(Linter):
             formula = formula[1:]
         tokens = re.findall(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b', formula)
         return {t for t in tokens if t in self._all_setting_names}
-
-    # ------------------------------------------------------------------
-    # Definition hierarchy loading
-    # ------------------------------------------------------------------
 
     def _build_value_map_from_def_hierarchy(self, def_file: Path) -> Dict[str, str]:
         """Recursively collect ``value`` formulas from a definition's full chain.
@@ -252,10 +232,6 @@ class CircularDependency(Linter):
                 if "children" in value:
                     self._extract_values_from_settings_tree(value["children"], result)
 
-    # ------------------------------------------------------------------
-    # Filesystem helpers
-    # ------------------------------------------------------------------
-
     def _find_definitions_dir(self) -> Optional[Path]:
         """Walk up the directory tree to locate ``resources/definitions``."""
         search = self._file.parent
@@ -294,10 +270,6 @@ class CircularDependency(Linter):
                     self._all_setting_names.add(key)
                 if "children" in value:
                     self._collect_setting_keys(value["children"])
-
-    # ------------------------------------------------------------------
-    # Offset resolution
-    # ------------------------------------------------------------------
 
     def _find_offset_for_cycle_node(
         self, content: str, cycle: List[str], preferred_keys: Set[str]
