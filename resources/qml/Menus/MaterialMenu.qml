@@ -41,13 +41,6 @@ Cura.Menu
         enabled: updateModels
     }
 
-    Cura.MaterialBrandsModel
-    {
-        id: brandModel
-        extruderPosition: materialMenu.extruderIndex
-        enabled: updateModels
-    }
-
     Cura.MenuItem
     {
         text: catalog.i18nc("@label:category menu label", "Favorites")
@@ -96,6 +89,13 @@ Cura.Menu
 
     Cura.MenuSeparator {}
 
+    Cura.MaterialBrandsModel
+    {
+        id: brandModel
+        extruderPosition: materialMenu.extruderIndex
+        enabled: updateModels
+    }
+
     Instantiator
     {
         model: brandModel
@@ -103,8 +103,12 @@ Cura.Menu
         {
             materialTypesModel: model
         }
-        onObjectAdded: function(index, object) { materialMenu.insertItem(index + 4, object)}
-        onObjectRemoved: function(index, object) { materialMenu.removeItem(index) }
+        onObjectAdded: function(index, object) {
+            materialMenu.insertMenu(index + 4, object);
+        }
+        onObjectRemoved: function(index, object) {
+            materialMenu.removeMenu(index);
+        }
     }
 
     Cura.MenuSeparator {}
