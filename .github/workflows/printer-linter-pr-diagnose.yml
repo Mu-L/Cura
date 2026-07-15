@@ -39,6 +39,7 @@ jobs:
         run: mkdir printer-linter-result
 
       - name: Collect printer files specified by input (UM only, optional)
+        id: collect-printer-files
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.printer != '' }}
         env:
           PRINTER_INPUT: ${{ github.event.inputs.printer }}
@@ -58,11 +59,11 @@ jobs:
             echo "::error::No resource files found for printer '${PRINTER_INPUT}'. Verify the printer name is correct."
             exit 1
           fi
-          echo "PRINTER_FILES=$FILES" >> "$GITHUB_ENV"
+          echo "PRINTER_FILES=$FILES" >> "$GITHUB_OUTPUT"
 
       - name: Diagnose printer file(s) specified by input (UM only, optional)
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.printer != '' }}
-        run: python printer-linter/src/terminal.py --diagnose --report printer-linter-result/fixes.yml $PRINTER_FILES
+        run: python printer-linter/src/terminal.py --diagnose --report printer-linter-result/fixes.yml ${{ steps.collect-printer-files.outputs.PRINTER_FILES }}
 
       - name: Diagnose file(s)
         if: env.GIT_DIFF && !env.MATCHED_FILES
