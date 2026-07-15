@@ -234,12 +234,10 @@ class CircularDependency(Linter):
 
     def _find_definitions_dir(self) -> Optional[Path]:
         """Walk up the directory tree to locate ``resources/definitions``."""
-        search = self._file.parent
-        for _ in range(10):
+        for search in (self._file.parent, *self._file.parent.parents):
             candidate = search / "resources" / "definitions"
             if candidate.exists():
                 return candidate
-            search = search.parent
         return None
 
     def _load_all_setting_names(self) -> None:
