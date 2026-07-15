@@ -13,34 +13,6 @@ Cura.Menu
     title: catalog.i18nc("@title:menu menubar:toplevel", "&File")
     property var fileProviderModel: CuraApplication.getFileProviderModel()
 
-    Timer {
-        id: menuRefreshTimerOpen
-        interval: 25
-        onTriggered: {
-            base.open()
-        }
-    }
-
-    Timer {
-        id: menuRefreshTimerClose
-        interval: 50
-        onTriggered: {
-            base.close()
-        }
-    }
-    
-    Connections {
-        target: base.fileProviderModel
-        function onCountChanged() {
-            // workaround for a bug where the menu does not refresh (properly) when the model changes
-            if (Qt.platform.os == "osx")
-            {
-                menuRefreshTimerOpen.restart()
-                menuRefreshTimerClose.restart()
-            }
-        }
-    }
-
     Cura.MenuItem
     {
         action: Cura.Actions.newProject

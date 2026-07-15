@@ -43,7 +43,7 @@ Cura.Menu
         onObjectAdded: function(index, object)
         {
             materialBrandMenu.insertMenu(index, object);
-            object.title = object.title + " ";
+            if (Qt.platform.os == "osx") object.title += " ";
         }
         onObjectRemoved: function(index, object) { materialBrandMenu.removeMenu(object); }
     }

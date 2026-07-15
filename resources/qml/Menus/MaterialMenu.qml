@@ -59,11 +59,14 @@ Cura.Menu
             checked: model.root_material_id === materialMenu.currentRootMaterialId
             onTriggered: Cura.MachineManager.setMaterial(extruderIndex, model.container_node)
         }
-        onObjectAdded: function(index, object) { materialMenu.insertItem(index + 1, object) }
+        onObjectAdded: function(index, object) {
+            materialMenu.insertItem(index + 1, object);
+            if (Qt.platform.os == "osx") object.text += " ";
+        }
         onObjectRemoved: function(index, object) { materialMenu.removeItem(index) }
     }
 
-    Cura.MenuSeparator { visible: favoriteMaterialsModel.items.length > 0}
+    Cura.MenuSeparator { visible: favoriteMaterialsModel.items.length > 0 }
 
     Cura.Menu
     {
@@ -82,8 +85,11 @@ Cura.Menu
                 checked: model.root_material_id === materialMenu.currentRootMaterialId
                 onTriggered: Cura.MachineManager.setMaterial(extruderIndex, model.container_node)
             }
-            onObjectAdded: function(index, object) { genericMenu.insertItem(index, object)}
-            onObjectRemoved: function(index, object) {genericMenu.removeItem(index) }
+            onObjectAdded: function(index, object) {
+                genericMenu.insertItem(index, object);
+                if (Qt.platform.os == "osx") object.text += " ";
+            }
+            onObjectRemoved: function(index, object) { genericMenu.removeItem(index); }
         }
     }
 
@@ -105,6 +111,7 @@ Cura.Menu
         }
         onObjectAdded: function(index, object) {
             materialMenu.insertMenu(index + 4, object);
+            if (Qt.platform.os == "osx") object.title += " ";
         }
         onObjectRemoved: function(index, object) {
             materialMenu.removeMenu(index);
