@@ -144,7 +144,7 @@ class CircularDependency(Linter):
         return graph
 
     def _detect_cycle(self, graph: Dict[str, Set[str]]) -> Optional[List[str]]:
-        """DFS-based cycle detection.
+        """Depth-First-Search-based cycle detection.
 
         Returns the cycle as a list of node names where the first and last element
         are the same (e.g. ``['a', 'b', 'a']``), or ``None`` if no cycle exists.
@@ -152,7 +152,7 @@ class CircularDependency(Linter):
         """
         visited: Set[str] = set()
 
-        def dfs(node: str, path: List[str], path_set: Set[str]) -> Optional[List[str]]:
+        def depth_first_search(node: str, path: List[str], path_set: Set[str]) -> Optional[List[str]]:
             visited.add(node)
             path.append(node)
             path_set.add(node)
@@ -161,7 +161,7 @@ class CircularDependency(Linter):
                     start = path.index(neighbor)
                     return path[start:] + [neighbor]
                 if neighbor not in visited:
-                    result = dfs(neighbor, path, path_set)
+                    result = depth_first_search(neighbor, path, path_set)
                     if result is not None:
                         return result
             path.pop()
@@ -170,7 +170,7 @@ class CircularDependency(Linter):
 
         for node in sorted(graph.keys()):
             if node not in visited:
-                result = dfs(node, [], set())
+                result = depth_first_search(node, [], set())
                 if result is not None:
                     return result
         return None
