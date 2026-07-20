@@ -73,7 +73,6 @@ Item
 
     property alias configureSettingVisibility: configureSettingVisibilityAction
 
-    property alias save: saveAction
     property alias saveUCP: saveUCPAction
     property alias export_: exportAction
     property alias exportSelection: exportSelectionAction
@@ -563,32 +562,6 @@ Item
         text: catalog.i18nc("@title:menu menubar:file Don't translate 'Universal Cura Project'", "&Save Universal Cura Project...")
         enabled: UM.WorkspaceFileHandler.enabled && CuraApplication.getPackageManager().allEnabledPackages.includes("3MFWriter")
         onTriggered: CuraApplication.exportUcp()
-    }
-
-
-    Action
-    {
-        id: saveAction
-        shortcut: StandardKey.Save
-        text: catalog.i18nc("@title:menu menubar:file", "&Save Project...")
-        enabled: UM.WorkspaceFileHandler.enabled //&& projectOutputDevicesModel.count == 1
-        onTriggered:
-        {
-            const args = {
-                "filter_by_machine": false,
-                "file_type": "workspace",
-                "preferred_mimetypes": "application/vnd.ms-package.3dmanufacturing-3dmodel+xml",
-                "limit_mimetypes":["application/vnd.ms-package.3dmanufacturing-3dmodel+xml"],
-            };
-            if (UM.Preferences.getValue("cura/dialog_on_project_save"))
-            {
-                saveWorkspaceDialogComponent.createObject(base, {"args": args}).open()
-            }
-            else
-            {
-                UM.OutputDeviceManager.requestWriteToDevice("local_file", PrintInformation.jobName, args)
-            }
-        }
     }
 
     Action
