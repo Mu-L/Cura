@@ -74,7 +74,7 @@ Item
     property alias configureSettingVisibility: configureSettingVisibilityAction
 
     property alias saveUCP: saveUCPAction
-    property alias export_: exportAction
+    property alias exportAll: exportAllAction
     property alias exportSelection: exportSelectionAction
 
     property alias browsePackages: browsePackagesAction
@@ -566,7 +566,7 @@ Item
 
     Action
     {
-        id: exportAction
+        id: exportAllAction
         text: catalog.i18nc("@title:menu menubar:file", "&Export...")
         onTriggered:
         {

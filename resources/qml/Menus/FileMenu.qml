@@ -77,7 +77,7 @@ Cura.Menu
 
     Cura.MenuItem
     {
-        action: Cura.Actions.export_
+        action: Cura.Actions.exportAll
     }
 
     Cura.MenuItem
