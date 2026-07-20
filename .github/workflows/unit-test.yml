@@ -57,7 +57,7 @@ jobs:
       always() &&
       needs.check_actor.outputs.proceed == 'true' &&
       needs.find-ticket-packages.result == 'success'
-    uses: ultimaker/cura-workflows/.github/workflows/unit-test.yml@CURA-13226_slice-speed-benchmark-tooling
+    uses: ultimaker/cura-workflows/.github/workflows/unit-test.yml@main
     with:
       test_use_pytest: true
       package_overrides: ${{ needs.find-ticket-packages.outputs.package_overrides || '' }}
